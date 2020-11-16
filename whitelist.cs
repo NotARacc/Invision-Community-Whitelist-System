@@ -8,8 +8,8 @@ namespace invision_whitelist
 {
     public class whitelist : BaseScript
     {
-        string communityURL = "http://statewiderp.net/api/";
-        string apiKey = "33aef123ad89f7865f5c41d7df43ac2e";
+        string communityURL = "http://WEB_URL/api/";
+        string apiKey = "API_KEY";
         string steamHex;
         bool isWhitelisted = false;
         JObject jsonRet;
