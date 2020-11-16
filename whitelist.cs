@@ -10,9 +10,12 @@ namespace invision_whitelist
     {
         string communityURL = "http://WEB_URL/api/";
         string apiKey = "API_KEY";
-        string steamHex;
-        bool isWhitelisted = false;
+        string groupID = "25";
+        string steamHex { get; set; }
         JObject jsonRet;
+        IRestClient client;
+        IRestRequest request;
+        IRestResponse response;
         public whitelist()
         {
             EventHandlers["playerConnecting"] += new Action<Player, string, dynamic, dynamic>(handleConnection);
@@ -35,9 +38,9 @@ namespace invision_whitelist
                 steamHex = player.Identifiers["steam"].ToLower().Replace("steam:", "");
             }
 
-            IRestClient client = new RestClient(communityURL);
-            IRestRequest request = new RestRequest("core/members?group=25&perPage=500&key=" + apiKey);
-            IRestResponse response = client.Execute(request);
+            client = new RestClient(communityURL);
+            request = new RestRequest("core/members?group=" + groupID + "&perPage=500&key=" + apiKey);
+            response = client.Execute(request);
             if (response.StatusCode == (HttpStatusCode)200)
             {
                 try
@@ -48,10 +51,16 @@ namespace invision_whitelist
                         string retrievedHex = obj["customFields"]["1"]["fields"]["3"]["value"].ToString().ToLower().Replace("steam:", "");
                         if(retrievedHex == steamHex)
                         {
-                            isWhitelisted = true;
-                            break;  
+                            Debug.WriteLine($"{player.Name} is whitelisted. Allowing connection.");
+                            deferrals.update("You are whitelisted. Redirecting you!");
+                            await Delay(500);
+                            deferrals.done();
+                            return;
                         }
                     }
+                    Debug.WriteLine($"{player.Name} is not whitelisted. Terminating connection.");
+                    deferrals.done("You are not whitelisted!");
+                    return;
                 } catch(Exception e)
                 {
                     Debug.WriteLine(e.ToString());
@@ -63,19 +72,6 @@ namespace invision_whitelist
             {
                 Debug.WriteLine(response.ErrorMessage);
                 deferrals.done("Could not query API. Try again later.");
-                return;
-            }
-
-            if(isWhitelisted)
-            {
-                Debug.WriteLine($"{player.Name} is whitelisted. Allowing connection.");
-                deferrals.update("You are whitelisted. Redirecting you!");
-                await Delay(500);
-                deferrals.done();
-            } else
-            {
-                Debug.WriteLine($"{player.Name} is not whitelisted. Terminating connection.");
-                deferrals.done("You are not whitelisted!");
                 return;
             }
         }
