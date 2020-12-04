@@ -19,6 +19,7 @@ namespace invision_whitelist
         public whitelist()
         {
             EventHandlers["playerConnecting"] += new Action<Player, string, dynamic, dynamic>(handleConnection);
+            ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => true;
         }
         
         private async void handleConnection([FromSource]Player player, string plrName, dynamic kickReason, dynamic deferrals)
